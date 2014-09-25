@@ -521,7 +521,7 @@
                           // Permission granted
                           NSLog(@"new permissions %@", [FBSession.activeSession permissions]);
                           // We can request the user information
-                          [self makeGraphCallPost:graphPath params:parameters];
+                          [self makeGraphCallPost:graphPath postParams:parameters];
                       } else {
                           // An error occurred, we need to handle the error
                           // See: https://developers.facebook.com/docs/ios/errors
@@ -530,7 +530,7 @@
              } else {
                  // Permissions are present
                  // We can request the user information
-                 [self makeGraphCallPost:graphPath params:parameters];
+                 [self makeGraphCallPost:graphPath postParams:parameters];
              }
 
          } else {
@@ -560,14 +560,14 @@
      }];
 }
 
-- (void) makeGraphCallPost:(NSString *)graphPath, (NSDictionary *)parameters
+- (void) makeGraphCallPost:(NSString *)graphPath postParams:(NSDictionary *)parameters
 {
 
     NSLog(@"Graph Path = %@", graphPath);
     [FBRequestConnection
      startWithGraphPath: graphPath
      parameters: parameters
-     method: @"POST"
+     HTTPMethod: @"POST"
      completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
          CDVPluginResult* pluginResult = nil;
          if (!error) {
