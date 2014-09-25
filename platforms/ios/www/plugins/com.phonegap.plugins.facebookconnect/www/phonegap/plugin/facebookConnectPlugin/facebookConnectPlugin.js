@@ -51,6 +51,12 @@ var facebookConnectPlugin = {
     api: function (graphPath, permissions, s, f) {
         if (!permissions) permissions = [];
         cordova.exec(s, f, "FacebookConnectPlugin", "graphApi", [graphPath, permissions]);
+    },
+
+    apiPost: function (graphPath, permissions, data, s, f) {
+        if (!permissions) permissions = [];
+        if (!data) data = {};
+        cordova.exec(s, f, "FacebookConnectPlugin", "graphApiPost", [graphPath, permissions, data]);
     }
 
 };
