@@ -438,19 +438,9 @@
      completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
 
          if (!error){
-             // These are the current permissions the user has:
-             NSDictionary *currentPermissions= [(NSArray *)[result data] objectAtIndex:0];
-
              // We will store here the missing permissions that we will have to request
-             NSMutableArray *requestPermissions = [[NSMutableArray alloc] initWithArray:@[]];
-
-             // Check if all the permissions we need are present in the user's current permissions
-             // If they are not present add them to the permissions to be requested
-             for (NSString *permission in permissionsNeeded){
-                 if (![currentPermissions objectForKey:permission]){
-                     [requestPermissions addObject:permission];
-                 }
-             }
+             NSArray *requestPermissions = [self getRequestedPermissions:permissionsNeeded
+                                                      fromResponseObject:result];
 
              // If we have permissions to request
              if ([requestPermissions count] > 0){
@@ -497,25 +487,16 @@
      completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
 
          if (!error){
-             // These are the current permissions the user has:
-             NSDictionary *currentPermissions= [(NSArray *)[result data] objectAtIndex:0];
-
              // We will store here the missing permissions that we will have to request
-             NSMutableArray *requestPermissions = [[NSMutableArray alloc] initWithArray:@[]];
-
-             // Check if all the permissions we need are present in the user's current permissions
-             // If they are not present add them to the permissions to be requested
-             for (NSString *permission in permissionsNeeded){
-                 if (![currentPermissions objectForKey:permission]){
-                     [requestPermissions addObject:permission];
-                 }
-             }
+             NSArray *requestPermissions = [self getRequestedPermissions:permissionsNeeded
+                                                      fromResponseObject:result];
 
              // If we have permissions to request
              if ([requestPermissions count] > 0){
                  // Ask for the missing permissions
                  [FBSession.activeSession
-                  requestNewReadPermissions:requestPermissions
+                  requestNewPublishPermissions:requestPermissions
+                  defaultAudience:FBSessionDefaultAudienceFriends
                   completionHandler:^(FBSession *session, NSError *error) {
                       if (!error) {
                           // Permission granted
@@ -538,6 +519,32 @@
              // See: https://developers.facebook.com/docs/ios/errors
          }
      }];
+}
+
+- (NSArray *)getRequestedPermissions:(NSArray *)neededPermissions fromResponseObject:(id)object
+{
+  id data = [object valueForKey:@"data"];
+
+  if (![data isKindOfClass:[NSArray class]]) {
+    return neededPermissions;
+  }
+
+  NSMutableArray *requestedPermissions = [NSMutableArray array];
+
+  for (NSString *permission in neededPermissions) {
+    [requestedPermissions addObject:permission];
+
+    for (NSDictionary *permissionData in data) {
+      if ([permissionData[@"permission"] isEqualToString:permission]) {
+        if ([permissionData[@"status"] isEqualToString:@"granted"]) {
+          [requestedPermissions removeLastObject];
+        }
+        break;
+      }
+    }
+  }
+
+  return requestedPermissions;
 }
 
 - (void) makeGraphCall:(NSString *)graphPath
